@@ -51,10 +51,15 @@ void loop() {
 // dot = 1, dash = 3, gap between elements = 1, between letters = 3, between words = 7.
 void sendMorseCode(String text) {
     text.toUpperCase(); // Convert text to uppercase
+    bool prevWasLetter = false;  // tracks whether to insert an inter-letter/word gap
     for (unsigned int i = 0; i < text.length(); i++) {
         char c = text[i];
+
         if (c == ' ') {
-            delay(dotDelay * 7); // Space between words (7 units)
+            if (prevWasLetter) {        // one 7-unit word gap (collapses repeated spaces)
+                delay(dotDelay * 7);
+                prevWasLetter = false;
+            }
             continue;
         }
 
@@ -67,12 +72,18 @@ void sendMorseCode(String text) {
             continue; // Ignore unsupported characters
         }
 
+        if (prevWasLetter) {
+            delay(dotDelay * 3); // 3-unit gap between letters
+        }
+
         const char* morse = morseCode[index];
         for (unsigned int j = 0; j < strlen(morse); j++) {
             blink(morse[j] == '-' ? dotDelay * 3 : dotDelay); // dash = 3 units, dot = 1
-            delay(dotDelay); // 1-unit gap between elements
+            if (j + 1 < strlen(morse)) {
+                delay(dotDelay); // 1-unit gap between elements (not after the last one)
+            }
         }
-        delay(dotDelay * 2); // +2 units after the trailing 1 = 3-unit gap between letters
+        prevWasLetter = true;
     }
 }
 
